@@ -51,7 +51,7 @@ for class_idx, class_name in enumerate(Diseases_classes):
 
     # Display each image with labels
     for i, img_file in enumerate(sampled_files):
-        img_path = os.path.join(train_dir, class_name, img_file) # Holds the main directory, class name, and specific image name (plant1.jpg)
+        img_path = os.path.join(train_dir, class_name, img_file) # Holds the main directory, class name, and specific image name ex.(plant1.jpg)
         img_show = plt.imread(img_path)                          # Used to display the specific image
         
         # Display the image in the grid
@@ -61,7 +61,7 @@ for class_idx, class_name in enumerate(Diseases_classes):
         ax.set_title(class_name, fontsize=8)  # Set the label as the class name
 
 print("\nThe total images inside the directory: ", tot_images , "\n")
-plt.tight_layout()      # Adjust space between each images
+plt.tight_layout()      # Adjust space between each images (Tidy up the text, images, and labels)
 plt.suptitle("10 Sampled Images per Class", fontsize=20)
 plt.show()
 
@@ -79,69 +79,70 @@ model.add(layers.Flatten()) # Flatten the image into column vector
 model.add(layers.Dense(64, activation = 'relu')) # After column vector made, Dense Layer is connected to column vector to learn complex data and patterns
 model.add(layers.Dense(10)) # Final output, represents the 10 classes in CIFAR-10
 
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),                # Shows how the model learn the data, to minimize error and improve training accuracy || Smaller learning rate shows indicates slower but stable learning
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),    # To minimize the loss predictions
+              metrics=['accuracy'])                                                    # Tracks the accuracy during training and validation
+# Loss measures the difference between predicted values and actual value || Accuracy is the percentage of the correct predictions
 
-# Define image data generators
+# Define image data generators (To avoid overfitting)
 train_datagen = ImageDataGenerator(
-    rescale=1.0/255,
-    rotation_range=20,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
-    shear_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True,
-    fill_mode='nearest'
+    rescale=1.0/255,           # Normalize the input to provide a better convergence (Allows machine to learn effectively, and provide better performance)
+    rotation_range=20,         # Rotate the images to recognize the pattern in different angle to improve predictions
+    width_shift_range=0.2,     # Shift the image horizontally for machines to recognize models in different parts
+    height_shift_range=0.2,    # Shift the image  vertically for machines to recognize models in different parts
+    shear_range=0.2,           # Apply 20% of slanting or tilting effect to improve the predictions
+    zoom_range=0.2,            # Zoom the images to allow the model to learn at different scale
+    horizontal_flip=True,      # Randomly flips the images horizontally, to view the images in different orientations to enhance the predictions
+    fill_mode='nearest'        # Fill in blank pixesls in images, to avoid models to learn unnatural parts
 )
 
+# Collect a data from directories images and assign labels to each
 train_generator = train_datagen.flow_from_directory(
     train_dir,
-    target_size=(32, 32),
-    batch_size=32,
-    class_mode='sparse',
-    classes=Diseases_classes,
-    shuffle=True
+    target_size=(32, 32),       # Resize image to 32x32 pixels || Able to resize any images with different size, making machine to train consistently
+    batch_size=32,              # Define how many images to be loaded per batch || Maximize computational efficiency and reducing idle time
+    class_mode='sparse',        # Assign unique integer label to each images
+    classes=Diseases_classes,   # From the three classes
+    shuffle=True                # Shuffles the order of images to avoid patterns in order data that could affect training
 )
 
-valid_datagen = ImageDataGenerator(rescale=1.0/255)
-valid_generator = valid_datagen.flow_from_directory(
+# Train valid images
+valid_datagen = ImageDataGenerator(rescale=1.0/255) # Rescale the picture to [0, 1] || Helps the model to train faster and more accurate by keeping input value small and consistent
+valid_generator = valid_datagen.flow_from_directory( # Sets up images in valid directory to train images
     valid_dir,
-    target_size=(32, 32),
+    target_size=(32, 32),       
     batch_size=32,
     class_mode='sparse',
     classes=Diseases_classes,
-    shuffle=False
+    shuffle=False                   # Shuffling in valid directory is unnecessary, as the order of images doesnt impact the evaluation phase
 )
 
 # Train the model
-epochs = 10
-history = model.fit(
-    train_generator,
-    epochs=epochs,
-    validation_data=valid_generator
+epochs = 10                             # Sets the number of training cycle
+history = model.fit(                    # Trains the model using specified data inside the fit() parameter
+    train_generator,                    # Train images and assign labels
+    epochs=epochs,                      # Undergoes training cycles
+    validation_data=valid_generator     # Performs validation data
 )
 
 # Plot training & validation accuracy and loss
-plt.figure(figsize=(12, 4))
-plt.subplot(1, 2, 1)
-plt.plot(history.history['accuracy'], label='Train Accuracy')
-plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
-plt.title('Model Accuracy')
-plt.ylabel('Accuracy')
-plt.xlabel('Epoch')
-plt.legend(loc='lower right')
+plt.figure(figsize=(12, 4))                                                # Specify the width and height of the graph
+plt.subplot(1, 2, 1)                                                       # Create a grid with 1 row and 2 column, for placing the graph || Last digits shows the graph placing in the left side
+plt.plot(history.history['accuracy'], label='Train Accuracy')              # Plots the training accuracy inside the graph
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')     # Plots the validation accuracy inside the graph
+plt.title('Model Accuracy')                                                # Title of the graph
+plt.ylabel('Accuracy')                                                     # y-axis label title
+plt.xlabel('Epoch')                                                        # x-axis label title
+plt.legend(loc='lower right')                                              # Legends located at the lower right
 
-plt.subplot(1, 2, 2)
-plt.plot(history.history['loss'], label='Train Loss')
-plt.plot(history.history['val_loss'], label='Validation Loss')
-plt.title('Model Loss')
-plt.ylabel('Loss')
-plt.xlabel('Epoch')
-plt.legend(loc='upper right')
+plt.subplot(1, 2, 2)                                                       # Last parameter, "2" shows that this graph will be placing at the right side
+plt.plot(history.history['loss'], label='Train Loss')                      # Plot the result of train loss
+plt.plot(history.history['val_loss'], label='Validation Loss')             # Plot the result of validation loss
+plt.title('Model Loss')                                                    # Title of the graph
+plt.ylabel('Loss')                                                         # y-axis label title
+plt.xlabel('Epoch')                                                        # x-axis label title
+plt.legend(loc='upper right')                                              # Legends located at upper right
 
-plt.tight_layout()
-plt.show()
-
-
+plt.tight_layout()                                                         # Adjust the space between each graph (making the text, line, graph more tidy)
+plt.show()                                                                 # Display the graph
 
